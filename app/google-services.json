@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "161171119879",
+    "project_id": "tunetellapp",
+    "storage_bucket": "tunetellapp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:161171119879:android:8b716c1465d47155ac2fa2",
+        "android_client_info": {
+          "package_name": "com.example.tunetell"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDytLSjw9Ju2Iz3TLAPaQwJ2sV3_tkeyew"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Primary Colors -->
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+
+    <!-- Modern Futuristic Colors -->
+    <color name="primary_dark">#1A1A2E</color>
+    <color name="primary_light">#16213E</color>
+    <color name="accent_cyan">#00D2FF</color>
+    <color name="accent_purple">#7B2CBF</color>
+    <color name="accent_pink">#FF006E</color>
+    <color name="card_bg">#1E1E2F</color>
+    <color name="text_primary">#FFFFFF</color>
+    <color name="text_secondary">#B0B0B8</color>
+    <color name="success">#00F5D4</color>
+    <color name="error">#FF006E</color>
+</resources>
