@@ -1,120 +1,184 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="@drawable/gradient_background">
+    android:background="@drawable/bg_modern_gradient">
 
-    <!-- Header with Glow -->
-    <LinearLayout
-        android:layout_width="match_parent"
+    <!-- Top Navigation -->
+    <ImageButton
+        android:id="@+id/btnLibrary"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:src="@android:drawable/ic_menu_my_calendar"
+        android:contentDescription="Library"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:tint="#FFFFFF" />
+
+    <TextView
+        android:id="@+id/tvAppName"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="24dp"
-        android:paddingTop="40dp">
+        android:text="TuneTell"
+        android:textColor="#FFFFFF"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:letterSpacing="0.05"
+        app:layout_constraintBottom_toBottomOf="@id/btnLibrary"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/btnLibrary" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="🎵 TuneTell"
-            android:textSize="28sp"
-            android:textStyle="bold"
-            android:textColor="@color/text_primary"
-            android:shadowColor="@color/accent_cyan"
-            android:shadowRadius="10" />
+    <ImageButton
+        android:id="@+id/btnLogout"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:src="@android:drawable/ic_lock_power_off"
+        android:contentDescription="Logout"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:tint="#FFFFFF" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="What's playing around you?"
-            android:textSize="14sp"
-            android:textColor="@color/text_secondary"
-            android:layout_marginTop="4dp" />
-
-    </LinearLayout>
-
-    <!-- Recognize Button -->
+    <!-- Central Recognition Area (Shazam Style) -->
     <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:layout_marginBottom="20dp">
+        android:id="@+id/centerArea"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@+id/guideline"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvAppName">
 
-        <Button
-            android:id="@+id/btnRecognize"
+        <!-- Pulsing Rings Container -->
+        <FrameLayout
+            android:id="@+id/ringContainer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone">
+
+            <View
+                android:id="@+id/ring1"
+                android:layout_width="220dp"
+                android:layout_height="220dp"
+                android:layout_gravity="center"
+                android:background="@drawable/pulse_ring"
+                android:alpha="0" />
+
+            <View
+                android:id="@+id/ring2"
+                android:layout_width="280dp"
+                android:layout_height="280dp"
+                android:layout_gravity="center"
+                android:background="@drawable/pulse_ring"
+                android:alpha="0" />
+
+            <View
+                android:id="@+id/ring3"
+                android:layout_width="340dp"
+                android:layout_height="340dp"
+                android:layout_gravity="center"
+                android:background="@drawable/pulse_ring"
+                android:alpha="0" />
+        </FrameLayout>
+
+        <!-- Main Recognition Button -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/recognizeCard"
             android:layout_width="180dp"
             android:layout_height="180dp"
             android:layout_gravity="center"
-            android:text="🎤"
-            android:textSize="64sp"
-            android:background="@drawable/button_gradient"
-            android:gravity="center"
-            android:elevation="8dp" />
+            app:cardCornerRadius="90dp"
+            app:cardElevation="24dp"
+            app:strokeWidth="0dp">
+
+            <ImageButton
+                android:id="@+id/btnRecognize"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/btn_neon_glow"
+                android:scaleType="centerInside"
+                android:src="@android:drawable/ic_btn_speak_now"
+                android:contentDescription="Recognize"
+                app:tint="#FFFFFF" />
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <TextView
+            android:id="@+id/tvListeningStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal|bottom"
+            android:layout_marginBottom="60dp"
+            android:text="Tap to Identify"
+            android:textColor="#FFFFFF"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:alpha="0.8" />
 
     </FrameLayout>
 
-    <TextView
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:text="Tap to Identify Song"
-        android:textSize="14sp"
-        android:textColor="@color/accent_cyan"
-        android:layout_marginBottom="24dp" />
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.6" />
 
-    <!-- Recent Recognitions Section -->
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Recent Recognitions"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        android:textColor="@color/text_primary"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="12dp" />
-
-    <!-- RecyclerView -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerView"
+    <!-- Recent Discoveries "Bottom Sheet" Style -->
+    <View
+        android:id="@+id/bottomSheetBg"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:layout_marginStart="12dp"
-        android:layout_marginEnd="12dp"
-        android:clipToPadding="false"
-        android:paddingBottom="16dp" />
+        android:background="@drawable/card_modern"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/guideline" />
 
-    <!-- Bottom Buttons -->
-    <LinearLayout
-        android:layout_width="match_parent"
+    <TextView
+        android:id="@+id/tvRecentTitle"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="16dp">
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="24dp"
+        android:text="Recent Discoveries"
+        android:textColor="#FFFFFF"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="@id/bottomSheetBg"
+        app:layout_constraintTop_toTopOf="@id/bottomSheetBg" />
 
-        <Button
-            android:id="@+id/btnLibrary"
-            android:layout_width="0dp"
-            android:layout_height="48dp"
-            android:layout_weight="1"
-            android:text="📚 My Library"
-            android:textSize="14sp"
-            android:layout_marginEnd="8dp"
-            android:background="@drawable/button_gradient"
-            android:textColor="@color/text_primary" />
+    <TextView
+        android:id="@+id/btnClearAll"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="24dp"
+        android:text="Clear"
+        android:textColor="#00D2FF"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:padding="8dp"
+        app:layout_constraintBottom_toBottomOf="@id/tvRecentTitle"
+        app:layout_constraintEnd_toEndOf="@id/bottomSheetBg"
+        app:layout_constraintTop_toTopOf="@id/tvRecentTitle" />
 
-        <Button
-            android:id="@+id/btnLogout"
-            android:layout_width="0dp"
-            android:layout_height="48dp"
-            android:layout_weight="1"
-            android:text="🚪 Logout"
-            android:textSize="14sp"
-            android:layout_marginStart="8dp"
-            android:background="@drawable/button_gradient"
-            android:textColor="@color/text_primary" />
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="12dp"
+        android:clipToPadding="false"
+        android:paddingHorizontal="16dp"
+        android:paddingBottom="24dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvRecentTitle" />
 
-    </LinearLayout>
-
-</LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

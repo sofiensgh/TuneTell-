@@ -3,102 +3,207 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fillViewport="true">
+    android:fillViewport="true"
+    android:background="@drawable/gradient_background">
 
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="24dp"
-        android:gravity="center_horizontal"
-        android:background="@drawable/gradient_background">
+        android:padding="32dp">
 
-        <TextView
+        <!-- Background Decorative Glows -->
+        <View
+            android:id="@+id/glowTop"
+            android:layout_width="350dp"
+            android:layout_height="350dp"
+            android:layout_marginTop="-175dp"
+            android:layout_marginEnd="-100dp"
+            android:background="@drawable/pulse_ring"
+            android:alpha="0.15"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <View
+            android:id="@+id/glowBottom"
+            android:layout_width="250dp"
+            android:layout_height="250dp"
+            android:layout_marginStart="-125dp"
+            android:layout_marginBottom="-100dp"
+            android:background="@drawable/pulse_ring"
+            android:alpha="0.1"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <!-- Logo Section with Shazam-style Halo -->
+        <FrameLayout
+            android:id="@+id/logoWrapper"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="🎵 TuneTell"
-            android:textSize="48sp"
-            android:textStyle="bold"
-            android:textColor="@color/text_primary"
             android:layout_marginTop="60dp"
-            android:layout_marginBottom="20dp"
-            android:shadowColor="@color/accent_cyan"
-            android:shadowDx="0"
-            android:shadowDy="0"
-            android:shadowRadius="15" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <View
+                android:layout_width="160dp"
+                android:layout_height="160dp"
+                android:layout_gravity="center"
+                android:background="@drawable/pulse_ring"
+                android:alpha="0.3" />
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="110dp"
+                android:layout_height="110dp"
+                android:layout_gravity="center"
+                app:cardCornerRadius="55dp"
+                app:cardBackgroundColor="#1A1A2E"
+                app:cardElevation="20dp"
+                app:strokeWidth="1dp"
+                app:strokeColor="#3300D2FF">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:text="🎵"
+                    android:textSize="60sp"
+                    android:gravity="center"
+                    android:shadowColor="#00D2FF"
+                    android:shadowRadius="20" />
+            </com.google.android.material.card.MaterialCardView>
+        </FrameLayout>
 
         <TextView
+            android:id="@+id/tvAppName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Identify Any Song Instantly"
-            android:textSize="16sp"
-            android:textColor="@color/text_secondary"
-            android:layout_marginBottom="60dp" />
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-            android:hint="Email Address"
-            app:hintTextColor="@color/accent_cyan">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/etEmail"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="textEmailAddress"
-                android:textColor="@color/text_primary"
-                android:textColorHint="@color/text_secondary" />
-
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="32dp"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-            app:endIconMode="password_toggle"
-            android:hint="Password"
-            app:hintTextColor="@color/accent_cyan">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/etPassword"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="textPassword"
-                android:textColor="@color/text_primary"
-                android:textColorHint="@color/text_secondary" />
-
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <Button
-            android:id="@+id/btnLogin"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:text="LOGIN"
-            android:textSize="16sp"
+            android:layout_marginTop="24dp"
+            android:text="TuneTell"
+            android:textColor="#FFFFFF"
+            android:textSize="44sp"
             android:textStyle="bold"
-            android:textColor="@color/text_primary"
-            android:background="@drawable/button_gradient"
-            android:elevation="8dp" />
+            android:letterSpacing="0.05"
+            app:layout_constraintTop_toBottomOf="@id/logoWrapper"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
 
-        <Button
+        <TextView
+            android:id="@+id/tvTagline"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="IDENTIFY THE MOMENT"
+            android:textColor="#00D2FF"
+            android:textSize="13sp"
+            android:letterSpacing="0.3"
+            android:textStyle="bold"
+            android:alpha="0.8"
+            app:layout_constraintTop_toBottomOf="@id/tvAppName"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <!-- Login Form -->
+        <LinearLayout
+            android:id="@+id/loginForm"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="56dp"
+            android:orientation="vertical"
+            app:layout_constraintTop_toBottomOf="@id/tvTagline">
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilEmail"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:hint="Email Address"
+                app:hintTextColor="#00D2FF"
+                app:boxStrokeColor="#00D2FF"
+                app:boxCornerRadiusTopStart="28dp"
+                app:boxCornerRadiusTopEnd="28dp"
+                app:boxCornerRadiusBottomStart="28dp"
+                app:boxCornerRadiusBottomEnd="28dp"
+                app:startIconDrawable="@android:drawable/ic_dialog_email"
+                app:startIconTint="#8899AA">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etEmail"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textEmailAddress"
+                    android:textColor="#FFFFFF"
+                    android:paddingStart="24dp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilPassword"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:hint="Password"
+                app:hintTextColor="#00D2FF"
+                app:boxStrokeColor="#00D2FF"
+                app:boxCornerRadiusTopStart="28dp"
+                app:boxCornerRadiusTopEnd="28dp"
+                app:boxCornerRadiusBottomStart="28dp"
+                app:boxCornerRadiusBottomEnd="28dp"
+                app:endIconMode="password_toggle"
+                app:endIconTint="#8899AA"
+                app:startIconDrawable="@android:drawable/ic_lock_idle_lock"
+                app:startIconTint="#8899AA">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etPassword"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textPassword"
+                    android:textColor="#FFFFFF"
+                    android:paddingStart="24dp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnLogin"
+                android:layout_width="match_parent"
+                android:layout_height="64dp"
+                android:layout_marginTop="40dp"
+                android:text="Sign In"
+                android:textAllCaps="false"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                app:cornerRadius="32dp"
+                android:backgroundTint="@android:color/transparent"
+                app:backgroundTint="@null"
+                android:background="@drawable/button_gradient"
+                app:elevation="12dp" />
+
+        </LinearLayout>
+
+        <TextView
             android:id="@+id/btnSignup"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Create New Account"
-            android:background="@android:color/transparent"
-            android:textColor="@color/accent_cyan"
-            android:textSize="14sp"
-            android:layout_marginTop="16dp" />
+            android:layout_marginTop="32dp"
+            android:padding="12dp"
+            android:text="New user? Join the rhythm"
+            android:textColor="#00D2FF"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackground"
+            app:layout_constraintTop_toBottomOf="@id/loginForm"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
 
+        <!-- Subtle Bottom Glow -->
         <View
             android:layout_width="match_parent"
-            android:layout_height="4dp"
-            android:layout_marginTop="60dp"
-            android:background="@drawable/glow_effect" />
+            android:layout_height="2dp"
+            android:layout_marginTop="40dp"
+            android:background="@drawable/glow_effect"
+            android:alpha="0.5"
+            app:layout_constraintTop_toBottomOf="@id/btnSignup" />
 
-    </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </ScrollView>

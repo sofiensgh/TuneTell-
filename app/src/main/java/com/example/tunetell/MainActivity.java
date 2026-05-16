@@ -1,16 +1,17 @@
 package com.example.tunetell;
 
 import android.Manifest;
-import android.animation.ValueAnimator;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.view.View;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -38,7 +39,15 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private TrackAdapter adapter;
     private List<MusicTrack> trackList;
-    private Button btnRecognize, btnLibrary, btnLogout;
+    private ImageButton btnRecognize, btnLibrary, btnLogout;
+    private TextView tvListeningStatus;
+    private View ringContainer;
+    private View ring1, ring2, ring3;
+    private TextView btnClearAll;
+
+    // Animations
+    private Animation fadeInUp, fadeOutDown;
+    private Animation buttonPulse;
 
     // Firebase
     private FirebaseAuth mAuth;
@@ -48,8 +57,6 @@ public class MainActivity extends AppCompatActivity {
     private AudDHelper audDHelper;
     private boolean isRecognizing = false;
     private Handler autoStopHandler;
-    private Animation pulseAnimation;
-    private ValueAnimator glowAnimator;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,28 +95,24 @@ public class MainActivity extends AppCompatActivity {
         btnRecognize = findViewById(R.id.btnRecognize);
         btnLibrary = findViewById(R.id.btnLibrary);
         btnLogout = findViewById(R.id.btnLogout);
+        tvListeningStatus = findViewById(R.id.tvListeningStatus);
+        ringContainer = findViewById(R.id.ringContainer);
+        ring1 = findViewById(R.id.ring1);
+        ring2 = findViewById(R.id.ring2);
+        ring3 = findViewById(R.id.ring3);
+        btnClearAll = findViewById(R.id.btnClearAll);
     }
 
     private void initAnimations() {
         try {
-            pulseAnimation = AnimationUtils.loadAnimation(this, R.anim.pulse_animation);
+            fadeInUp = AnimationUtils.loadAnimation(this, R.anim.fade_in_up);
+            fadeOutDown = AnimationUtils.loadAnimation(this, R.anim.fade_out_down);
+            buttonPulse = AnimationUtils.loadAnimation(this, R.anim.button_pulse);
         } catch (Exception e) {
-            pulseAnimation = null;
+            fadeInUp = null;
+            fadeOutDown = null;
+            buttonPulse = null;
         }
-
-        // Create glow animation for button
-        glowAnimator = ValueAnimator.ofFloat(0f, 1f, 0f);
-        glowAnimator.setDuration(1500);
-        glowAnimator.setRepeatCount(ValueAnimator.INFINITE);
-        glowAnimator.setRepeatMode(ValueAnimator.REVERSE);
-        glowAnimator.setInterpolator(new AccelerateDecelerateInterpolator());
-        glowAnimator.addUpdateListener(animation -> {
-            if (btnRecognize != null && isRecognizing) {
-                float value = (float) animation.getAnimatedValue();
-                float elevation = 8f + (value * 12f);
-                btnRecognize.setElevation(elevation);
-            }
-        });
     }
 
     private void setupRecyclerView() {
@@ -127,9 +130,7 @@ public class MainActivity extends AppCompatActivity {
             public void onSuccess(String title, String artist, String album, String artworkUrl) {
                 runOnUiThread(() -> {
                     stopListeningAnimation();
-                    Toast.makeText(MainActivity.this,
-                            "🎉 Recognized: " + title + "\n🎤 Artist: " + artist,
-                            Toast.LENGTH_LONG).show();
+                    animateSuccess();
                     saveRecognizedSong(title, artist);
                     resetRecognitionButton();
                 });
@@ -139,6 +140,7 @@ public class MainActivity extends AppCompatActivity {
             public void onFailure(String errorMessage) {
                 runOnUiThread(() -> {
                     stopListeningAnimation();
+                    animateFailure();
                     showErrorDialog(errorMessage);
                     resetRecognitionButton();
                 });
@@ -146,35 +148,38 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onStartListening() {
-                runOnUiThread(() -> {
-                    startListeningAnimation();
-                });
+                runOnUiThread(() -> startListeningAnimation());
             }
 
             @Override
             public void onStopListening() {
-                runOnUiThread(() -> {
-                    // Recognition stopped
-                });
+                // Notified when recognition session ends
             }
         });
     }
 
     private void setupClickListeners() {
         btnRecognize.setOnClickListener(v -> {
+            animateButtonPress(v);
             performHapticFeedback();
             checkPermissionAndRecognize();
         });
 
         btnLibrary.setOnClickListener(v -> {
+            animateButtonPress(v);
             performHapticFeedback();
             showLibraryDialog();
         });
 
         btnLogout.setOnClickListener(v -> {
+            animateButtonPress(v);
             performHapticFeedback();
             logout();
         });
+
+        if (btnClearAll != null) {
+            btnClearAll.setOnClickListener(v -> clearAllTracks());
+        }
     }
 
     private void startWelcomeAnimation() {
@@ -195,190 +200,161 @@ public class MainActivity extends AppCompatActivity {
     private void startListeningAnimation() {
         isRecognizing = true;
 
-        if (pulseAnimation != null) {
-            btnRecognize.startAnimation(pulseAnimation);
+        if (ringContainer != null) {
+            ringContainer.setVisibility(View.VISIBLE);
+            ringContainer.setAlpha(0f);
+            ringContainer.animate().alpha(1f).setDuration(300).start();
         }
 
-        if (glowAnimator != null) {
-            glowAnimator.start();
+        startRingAnimation(ring1, 0);
+        startRingAnimation(ring2, 400);
+        startRingAnimation(ring3, 800);
+
+        if (buttonPulse != null && btnRecognize != null) {
+            btnRecognize.startAnimation(buttonPulse);
         }
 
-        btnRecognize.setText("🎤");
-        btnRecognize.setEnabled(false);
+        if (tvListeningStatus != null) {
+            tvListeningStatus.setText("LISTENING...");
+            if (fadeInUp != null) tvListeningStatus.startAnimation(fadeInUp);
+        }
 
-        Toast.makeText(this,
-                "🎧 Listening for 8 seconds...\nPlay a song near your phone",
-                Toast.LENGTH_LONG).show();
+        if (btnRecognize != null) {
+            btnRecognize.animate().scaleX(1.05f).scaleY(1.05f).setDuration(300).start();
+            btnRecognize.setEnabled(false);
+        }
+    }
+
+    private void startRingAnimation(View ring, int delay) {
+        if (ring == null) return;
+        ring.setScaleX(1f);
+        ring.setScaleY(1f);
+        ring.setAlpha(0.6f);
+        ring.animate()
+                .scaleX(1.8f)
+                .scaleY(1.8f)
+                .alpha(0f)
+                .setDuration(1500)
+                .setStartDelay(delay)
+                .withEndAction(() -> {
+                    if (isRecognizing) startRingAnimation(ring, 0);
+                })
+                .start();
     }
 
     private void stopListeningAnimation() {
+        if (ringContainer != null) {
+            ringContainer.animate().alpha(0f).setDuration(300)
+                    .withEndAction(() -> ringContainer.setVisibility(View.GONE));
+        }
         if (btnRecognize != null) {
             btnRecognize.clearAnimation();
+            btnRecognize.animate().scaleX(1f).scaleY(1f).setDuration(300).start();
         }
-        if (glowAnimator != null) {
-            glowAnimator.cancel();
+        if (tvListeningStatus != null) {
+            tvListeningStatus.setText("Tap to Identify");
+            if (fadeOutDown != null) tvListeningStatus.startAnimation(fadeOutDown);
         }
+    }
+
+    private void animateSuccess() {
         if (btnRecognize != null) {
-            btnRecognize.setElevation(8f);
+            btnRecognize.animate().scaleX(1.2f).scaleY(1.2f).setDuration(200)
+                    .withEndAction(() -> btnRecognize.animate().scaleX(1f).scaleY(1f).setDuration(200).start())
+                    .start();
         }
+    }
+
+    private void animateFailure() {
+        if (btnRecognize != null) {
+            btnRecognize.animate().rotationBy(10f).setDuration(50)
+                    .withEndAction(() -> btnRecognize.animate().rotationBy(-20f).setDuration(100)
+                            .withEndAction(() -> btnRecognize.animate().rotationBy(10f).setDuration(50).start()).start())
+                    .start();
+        }
+    }
+
+    private void animateButtonPress(View button) {
+        button.animate().scaleX(0.95f).scaleY(0.95f).setDuration(100)
+                .withEndAction(() -> button.animate().scaleX(1f).scaleY(1f).setDuration(100).start())
+                .start();
     }
 
     private void resetRecognitionButton() {
         if (btnRecognize != null) {
-            btnRecognize.setText("🎤");
             btnRecognize.setEnabled(true);
         }
         isRecognizing = false;
         autoStopHandler.removeCallbacksAndMessages(null);
-
-        if (btnRecognize != null) {
-            btnRecognize.setScaleX(1f);
-            btnRecognize.setScaleY(1f);
-        }
     }
 
     private void checkPermissionAndRecognize() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
                 != PackageManager.PERMISSION_GRANTED) {
-
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.RECORD_AUDIO)) {
-                showPermissionRationaleDialog();
-            } else {
-                ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.RECORD_AUDIO},
-                        REQUEST_RECORD_AUDIO_PERMISSION);
-            }
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, REQUEST_RECORD_AUDIO_PERMISSION);
         } else {
             startRecognition();
         }
     }
 
-    private void showPermissionRationaleDialog() {
-        new MaterialAlertDialogBuilder(this)
-                .setTitle("🎤 Microphone Permission")
-                .setMessage("TuneTell needs microphone access to listen and identify songs playing around you.")
-                .setPositiveButton("Grant Permission", (dialog, which) -> {
-                    ActivityCompat.requestPermissions(this,
-                            new String[]{Manifest.permission.RECORD_AUDIO},
-                            REQUEST_RECORD_AUDIO_PERMISSION);
-                })
-                .setNegativeButton("Cancel", null)
-                .show();
-    }
-
     private void startRecognition() {
         if (isRecognizing) return;
         audDHelper.startRecognition();
-
         autoStopHandler.postDelayed(() -> {
-            if (isRecognizing) {
-                audDHelper.stopAndRecognize();
-            }
+            if (isRecognizing) audDHelper.stopAndRecognize();
         }, 12000);
     }
 
     private void saveRecognizedSong(String title, String artist) {
         String id = db.collection("tracks").document().getId();
         MusicTrack track = new MusicTrack(id, title, artist);
-
         db.collection("tracks").document(id).set(track)
-                .addOnSuccessListener(aVoid -> {
-                    loadTracks();
-                    animateNewTrackEntry();
-                })
-                .addOnFailureListener(e ->
-                        Toast.makeText(this, "Failed to save history", Toast.LENGTH_SHORT).show()
-                );
-    }
-
-    private void animateNewTrackEntry() {
-        if (recyclerView != null && recyclerView.getChildCount() > 0) {
-            android.view.View firstChild = recyclerView.getChildAt(0);
-            if (firstChild != null) {
-                firstChild.setScaleX(0.8f);
-                firstChild.setScaleY(0.8f);
-                firstChild.setAlpha(0f);
-                firstChild.animate()
-                        .scaleX(1f)
-                        .scaleY(1f)
-                        .alpha(1f)
-                        .setDuration(400)
-                        .setInterpolator(new AccelerateDecelerateInterpolator())
-                        .start();
-            }
-        }
+                .addOnSuccessListener(aVoid -> loadTracks());
     }
 
     private void loadTracks() {
-        db.collection("tracks")
-                .orderBy("timestamp", Query.Direction.DESCENDING)
-                .limit(20)
+        db.collection("tracks").orderBy("timestamp", Query.Direction.DESCENDING).limit(20)
                 .addSnapshotListener((value, error) -> {
-                    if (error != null) return;
-                    if (value != null) {
-                        trackList.clear();
-                        for (QueryDocumentSnapshot document : value) {
-                            MusicTrack track = document.toObject(MusicTrack.class);
-                            track.setId(document.getId());
-                            trackList.add(track);
-                        }
-                        adapter.notifyDataSetChanged();
-
-                        if (trackList.isEmpty()) {
-                            // Empty state
-                        }
+                    if (error != null || value == null) return;
+                    trackList.clear();
+                    for (QueryDocumentSnapshot doc : value) {
+                        MusicTrack track = doc.toObject(MusicTrack.class);
+                        track.setId(doc.getId());
+                        trackList.add(track);
                     }
+                    adapter.notifyDataSetChanged();
                 });
     }
 
     private void showTrackDetailsDialog(MusicTrack track) {
-        String date = new SimpleDateFormat("EEEE, MMM d, yyyy 'at' h:mm a", Locale.getDefault())
-                .format(new Date(track.getTimestamp()));
-
+        String date = new SimpleDateFormat("MMM d, yyyy 'at' h:mm a", Locale.getDefault()).format(new Date(track.getTimestamp()));
         new MaterialAlertDialogBuilder(this)
                 .setTitle("🎵 " + track.getTitle())
                 .setMessage("🎤 Artist: " + track.getArtist() + "\n\n📅 " + date)
                 .setPositiveButton("OK", null)
+                .setNeutralButton("Delete", (dialog, which) -> deleteTrack(track))
                 .show();
     }
 
-    private void showLibraryDialog() {
-        if (trackList.isEmpty()) {
-            new MaterialAlertDialogBuilder(this)
-                    .setTitle("📚 My Library")
-                    .setMessage("Your library is empty. Start recognizing songs!")
-                    .setPositiveButton("OK", null)
-                    .show();
-        } else {
-            StringBuilder library = new StringBuilder();
-            for (int i = 0; i < Math.min(trackList.size(), 10); i++) {
-                MusicTrack track = trackList.get(i);
-                library.append("🎵 ").append(track.getTitle())
-                        .append(" - ").append(track.getArtist())
-                        .append("\n");
-            }
-            if (trackList.size() > 10) {
-                library.append("\n... and ").append(trackList.size() - 10).append(" more");
-            }
+    private void deleteTrack(MusicTrack track) {
+        db.collection("tracks").document(track.getId()).delete()
+                .addOnSuccessListener(aVoid -> loadTracks());
+    }
 
-            new MaterialAlertDialogBuilder(this)
-                    .setTitle("📚 My Library (" + trackList.size() + " songs)")
-                    .setMessage(library.toString())
-                    .setPositiveButton("Close", null)
-                    .setNeutralButton("Clear All", (dialog, which) -> clearAllTracks())
-                    .show();
-        }
+    private void showLibraryDialog() {
+        new MaterialAlertDialogBuilder(this)
+                .setTitle("📚 My Library")
+                .setMessage(trackList.isEmpty() ? "Your library is empty." : "You have " + trackList.size() + " discovered songs.")
+                .setPositiveButton("OK", null)
+                .show();
     }
 
     private void clearAllTracks() {
         new MaterialAlertDialogBuilder(this)
                 .setTitle("Clear Library")
-                .setMessage("Are you sure you want to delete all recognized songs?")
+                .setMessage("Delete all songs?")
                 .setPositiveButton("Yes", (dialog, which) -> {
-                    for (MusicTrack track : trackList) {
-                        db.collection("tracks").document(track.getId()).delete();
-                    }
-                    Toast.makeText(this, "Library cleared", Toast.LENGTH_SHORT).show();
+                    for (MusicTrack t : trackList) db.collection("tracks").document(t.getId()).delete();
                 })
                 .setNegativeButton("No", null)
                 .show();
@@ -387,7 +363,7 @@ public class MainActivity extends AppCompatActivity {
     private void showErrorDialog(String error) {
         new MaterialAlertDialogBuilder(this)
                 .setTitle("❌ Recognition Failed")
-                .setMessage(error + "\n\nTry:\n• Playing a more popular song\n• Increasing volume\n• Moving closer to the sound source")
+                .setMessage(error)
                 .setPositiveButton("Try Again", (dialog, which) -> checkPermissionAndRecognize())
                 .setNegativeButton("Cancel", null)
                 .show();
@@ -400,43 +376,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void logout() {
-        new MaterialAlertDialogBuilder(this)
-                .setTitle("Logout")
-                .setMessage("Are you sure you want to logout?")
-                .setPositiveButton("Yes", (dialog, which) -> {
-                    mAuth.signOut();
-                    startActivity(new Intent(MainActivity.this, LoginActivity.class));
-                    finish();
-                })
-                .setNegativeButton("No", null)
-                .show();
+        mAuth.signOut();
+        startActivity(new Intent(this, LoginActivity.class));
+        finish();
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-                                           @NonNull int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == REQUEST_RECORD_AUDIO_PERMISSION) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                startRecognition();
-            } else {
-                Toast.makeText(this, "Microphone permission required for song recognition",
-                        Toast.LENGTH_LONG).show();
-            }
-        }
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if (audDHelper != null) {
-            audDHelper.stopRecognition();
-        }
-        if (glowAnimator != null) {
-            glowAnimator.cancel();
-        }
-        if (autoStopHandler != null) {
-            autoStopHandler.removeCallbacksAndMessages(null);
+        if (requestCode == REQUEST_RECORD_AUDIO_PERMISSION && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            startRecognition();
         }
     }
 }
