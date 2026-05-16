@@ -36,7 +36,7 @@ public class AudDHelper {
     private Context context;
 
     public interface RecognitionListener {
-        void onSuccess(String title, String artist, String album, String artworkUrl);
+        void onSuccess(String title, String artist, String album, String artworkUrl, String spotifyUrl, String youtubeUrl);
         void onFailure(String errorMessage);
         void onStartListening();
         void onStopListening();
@@ -61,29 +61,35 @@ public class AudDHelper {
                 oldFile.delete();
             }
 
+            // Optimized recording settings for better recognition
             mediaRecorder = new MediaRecorder();
             mediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
             mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
             mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
+            mediaRecorder.setAudioSamplingRate(44100);      // CD Quality
+            mediaRecorder.setAudioChannels(2);               // Stereo for better detection
+            mediaRecorder.setAudioEncodingBitRate(192000);   // High bitrate
             mediaRecorder.setOutputFile(audioFilePath);
             mediaRecorder.prepare();
             mediaRecorder.start();
             isRecording = true;
 
-            Log.d(TAG, "Recording started");
+            Log.d(TAG, "Recording started with optimized settings");
 
             if (listener != null) {
                 listener.onStartListening();
             }
 
+            // Increased to 15 seconds for better detection
             mainHandler.postDelayed(() -> {
                 if (isRecording) {
+                    Log.d(TAG, "Auto-stopping recording after 15 seconds");
                     stopAndRecognize();
                 }
-            }, 8000);
+            }, 15000);
 
         } catch (Exception e) {
-            Log.e(TAG, "Error: " + e.getMessage());
+            Log.e(TAG, "Error starting: " + e.getMessage());
             if (listener != null) {
                 listener.onFailure("Failed to start: " + e.getMessage());
             }
@@ -110,7 +116,7 @@ public class AudDHelper {
             recognizeAudio();
 
         } catch (Exception e) {
-            Log.e(TAG, "Error: " + e.getMessage());
+            Log.e(TAG, "Error stopping: " + e.getMessage());
             if (listener != null) {
                 listener.onFailure("Error: " + e.getMessage());
             }
@@ -141,15 +147,16 @@ public class AudDHelper {
                     return;
                 }
 
-                Log.d(TAG, "File size: " + audioFile.length() + " bytes");
+                long fileSize = audioFile.length();
+                Log.d(TAG, "File size: " + fileSize + " bytes");
 
-                if (audioFile.length() < 5000) {
-                    postFailure("Recording too short. Please try again.");
+                if (fileSize < 15000) {
+                    postFailure("Recording too short or quiet. Please try:\n• Play song louder\n• Record for 15 seconds\n• Move closer to speaker");
                     return;
                 }
 
                 FileInputStream fis = new FileInputStream(audioFile);
-                byte[] audioBytes = new byte[(int) audioFile.length()];
+                byte[] audioBytes = new byte[(int) fileSize];
                 fis.read(audioBytes);
                 fis.close();
 
@@ -158,6 +165,7 @@ public class AudDHelper {
                         .addFormDataPart("api_token", API_TOKEN)
                         .addFormDataPart("file", "recording.m4a",
                                 RequestBody.create(MediaType.parse("audio/m4a"), audioBytes))
+                        .addFormDataPart("return", "spotify,apple_music")
                         .build();
 
                 Request request = new Request.Builder()
@@ -174,9 +182,9 @@ public class AudDHelper {
 
                     @Override
                     public void onResponse(Call call, Response response) throws IOException {
-                        String responseBody = response.body().string();
-                        Log.d(TAG, "Raw Response: " + responseBody);
-                        parseResponseManual(responseBody);
+                        String json = response.body().string();
+                        Log.d(TAG, "Raw Response: " + json);
+                        parseResponse(json);
                     }
                 });
 
@@ -187,32 +195,51 @@ public class AudDHelper {
         }).start();
     }
 
-    private void parseResponseManual(String json) {
+    private void parseResponse(String json) {
         try {
-            Log.d(TAG, "Parsing response");
+            if (json == null || json.isEmpty()) {
+                postFailure("Empty response from server");
+                return;
+            }
 
-            // Check if response contains "success"
+            // Check for success status
             if (json.contains("\"status\":\"success\"")) {
-                // Try to extract title and artist
+                // Extract song information
                 String title = extractJsonValue(json, "title");
                 String artist = extractJsonValue(json, "artist");
+                String album = extractJsonValue(json, "album");
 
-                if (title != null && !title.isEmpty() && !title.equals("null")) {
-                    Log.d(TAG, "Found: " + title + " - " + artist);
-                    postSuccess(title, artist, "", "");
+                // Extract artwork URL
+                String artworkUrl = "";
+                if (json.contains("\"cover_art\"")) {
+                    artworkUrl = extractJsonValue(json, "cover_art");
+                }
+                if ((artworkUrl == null || artworkUrl.isEmpty()) && json.contains("\"artwork\"")) {
+                    artworkUrl = extractJsonValue(json, "url");
+                }
+
+                if (title != null && artist != null && !title.equals("null") && !title.isEmpty()) {
+                    // Create Spotify and YouTube links
+                    String spotifyUrl = "https://open.spotify.com/search/" + title.replace(" ", "%20");
+                    String youtubeUrl = "https://www.youtube.com/results?search_query=" +
+                            title.replace(" ", "+") + "+" + artist.replace(" ", "+");
+
+                    Log.d(TAG, "Success: " + title + " - " + artist);
+                    postSuccess(title, artist, album != null ? album : "",
+                            artworkUrl != null ? artworkUrl : "", spotifyUrl, youtubeUrl);
                 } else {
-                    postFailure("No song recognized. Try a different song.");
+                    postFailure("Could not identify the song.\n\nTips:\n• Play a popular song\n• Increase volume\n• Record for 15 seconds");
                 }
             } else if (json.contains("\"error\"")) {
                 String error = extractJsonValue(json, "error");
                 postFailure("API Error: " + (error != null ? error : "Unknown"));
             } else {
-                postFailure("No match found. Try again.");
+                postFailure("No song recognized.\n\nTry these popular songs:\n• Bohemian Rhapsody - Queen\n• Shape of You - Ed Sheeran\n• Blinding Lights - The Weeknd");
             }
 
         } catch (Exception e) {
             Log.e(TAG, "Parse error: " + e.getMessage());
-            postFailure("Parse error: " + e.getMessage());
+            postFailure("Failed to parse response. Please try again.");
         }
     }
 
@@ -221,33 +248,35 @@ public class AudDHelper {
             String search = "\"" + key + "\":\"";
             int start = json.indexOf(search);
             if (start == -1) {
-                // Try without quotes for value
                 search = "\"" + key + "\":";
                 start = json.indexOf(search);
-                if (start == -1) return null;
+                if (start == -1) return "";
                 start += search.length();
                 int end = json.indexOf(",", start);
                 if (end == -1) end = json.indexOf("}", start);
-                if (end == -1) return null;
+                if (end == -1) return "";
                 String value = json.substring(start, end).trim();
                 if (value.startsWith("\"")) value = value.substring(1);
                 if (value.endsWith("\"")) value = value.substring(0, value.length() - 1);
+                if (value.equals("null")) return "";
                 return value;
             }
 
             start += search.length();
             int end = json.indexOf("\"", start);
-            if (end == -1) return null;
-            return json.substring(start, end);
+            if (end == -1) return "";
+            String value = json.substring(start, end);
+            if (value.equals("null")) return "";
+            return value;
         } catch (Exception e) {
-            return null;
+            return "";
         }
     }
 
-    private void postSuccess(String title, String artist, String album, String artworkUrl) {
+    private void postSuccess(String title, String artist, String album, String artworkUrl, String spotifyUrl, String youtubeUrl) {
         mainHandler.post(() -> {
             if (listener != null) {
-                listener.onSuccess(title, artist, album, artworkUrl);
+                listener.onSuccess(title, artist, album, artworkUrl, spotifyUrl, youtubeUrl);
             }
         });
     }

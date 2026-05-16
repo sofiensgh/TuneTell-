@@ -21,6 +21,9 @@
 
         <activity android:name=".MainActivity" android:exported="false"/>
 
+        <!-- NEW: 3rd Activity - LibraryActivity -->
+        <activity android:name=".LibraryActivity" android:exported="false"/>
+
     </application>
 
 </manifest>

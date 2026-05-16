@@ -36,12 +36,15 @@ dependencies {
     implementation("com.google.android.material:material:1.9.0")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     implementation("androidx.recyclerview:recyclerview:1.3.0")
+    implementation("androidx.cardview:cardview:1.0.0")
 
     // Firebase
     implementation("com.google.firebase:firebase-auth:21.3.0")
     implementation("com.google.firebase:firebase-firestore:24.7.0")
 
-    // For AudD API (HTTP requests and JSON parsing)
+    // HTTP and JSON
     implementation("com.squareup.okhttp3:okhttp:4.11.0")
     implementation("com.google.code.gson:gson:2.10.1")
+
+    // No Picasso or Glide needed - using built-in AsyncTask
 }

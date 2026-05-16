@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/gradient_background"
+    android:padding="24dp"
+    android:elevation="24dp">
+
+    <!-- Close Button -->
+    <ImageView
+        android:id="@+id/btnClose"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_gravity="end"
+        android:src="@android:drawable/ic_menu_close_clear_cancel"
+        android:tint="#FFFFFF"
+        android:alpha="0.7" />
+
+    <!-- Album Cover -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="16dp">
+
+        <ImageView
+            android:id="@+id/ivAlbumCover"
+            android:layout_width="200dp"
+            android:layout_height="200dp"
+            android:layout_gravity="center"
+            android:scaleType="centerCrop"
+            android:background="@drawable/card_modern"
+            android:src="@drawable/ic_music_placeholder" />
+
+        <!-- Loading Overlay -->
+        <ProgressBar
+            android:id="@+id/progressCover"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_gravity="center"
+            android:visibility="gone" />
+
+    </FrameLayout>
+
+    <!-- Song Title -->
+    <TextView
+        android:id="@+id/tvSongTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Song Title"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:textColor="#FFFFFF"
+        android:gravity="center"
+        android:layout_marginTop="8dp" />
+
+    <!-- Artist Name -->
+    <TextView
+        android:id="@+id/tvArtistName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Artist Name"
+        android:textSize="16sp"
+        android:textColor="#8899AA"
+        android:gravity="center"
+        android:layout_marginTop="4dp" />
+
+    <!-- Album Name -->
+    <TextView
+        android:id="@+id/tvAlbumName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Album Name"
+        android:textSize="14sp"
+        android:textColor="#00D2FF"
+        android:gravity="center"
+        android:layout_marginTop="4dp" />
+
+    <!-- Divider -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#3300D2FF"
+        android:layout_margin="16dp" />
+
+    <!-- Action Buttons -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center">
+
+        <Button
+            android:id="@+id/btnSpotify"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:text="🎧 Spotify"
+            android:textSize="14sp"
+            android:textColor="#FFFFFF"
+            android:layout_marginEnd="8dp"
+            android:background="@drawable/button_gradient" />
+
+        <Button
+            android:id="@+id/btnYouTube"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:text="🎬 YouTube"
+            android:textSize="14sp"
+            android:textColor="#FFFFFF"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/button_gradient" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginTop="12dp">
+
+        <Button
+            android:id="@+id/btnSaveToLibrary"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:text="💾 Save to Library"
+            android:textSize="14sp"
+            android:textColor="#FFFFFF"
+            android:layout_marginEnd="8dp"
+            android:background="@drawable/button_gradient" />
+
+        <Button
+            android:id="@+id/btnDismiss"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:text="✕ Dismiss"
+            android:textSize="14sp"
+            android:textColor="#FFFFFF"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/button_gradient" />
+
+    </LinearLayout>
+
+</LinearLayout>

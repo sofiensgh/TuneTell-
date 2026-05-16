@@ -3,6 +3,7 @@ package com.example.tunetell;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -22,6 +23,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.tunetell.adapters.TrackAdapter;
 import com.example.tunetell.models.MusicTrack;
 import com.example.tunetell.utils.AudDHelper;
+import com.example.tunetell.utils.RecognitionResultDialog;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.*;
@@ -63,30 +65,16 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Initialize Firebase
         mAuth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
         autoStopHandler = new Handler();
 
-        // Initialize UI Components
         initViews();
-
-        // Initialize Animations
         initAnimations();
-
-        // Initialize RecyclerView
         setupRecyclerView();
-
-        // Initialize AudD Helper
         setupAudDHelper();
-
-        // Set Click Listeners
         setupClickListeners();
-
-        // Load saved tracks
         loadTracks();
-
-        // Start welcome animation
         startWelcomeAnimation();
     }
 
@@ -127,12 +115,14 @@ public class MainActivity extends AppCompatActivity {
     private void setupAudDHelper() {
         audDHelper = new AudDHelper(this, new AudDHelper.RecognitionListener() {
             @Override
-            public void onSuccess(String title, String artist, String album, String artworkUrl) {
+            public void onSuccess(String title, String artist, String album, String artworkUrl, String spotifyUrl, String youtubeUrl) {
                 runOnUiThread(() -> {
                     stopListeningAnimation();
-                    animateSuccess();
-                    saveRecognizedSong(title, artist);
                     resetRecognitionButton();
+
+                    RecognitionResultDialog dialog = new RecognitionResultDialog(title, artist, album, artworkUrl, spotifyUrl, youtubeUrl);
+                    dialog.setOnTrackSavedListener(() -> loadTracks());
+                    dialog.show(getSupportFragmentManager(), "recognition_result");
                 });
             }
 
@@ -168,7 +158,8 @@ public class MainActivity extends AppCompatActivity {
         btnLibrary.setOnClickListener(v -> {
             animateButtonPress(v);
             performHapticFeedback();
-            showLibraryDialog();
+            Intent intent = new Intent(MainActivity.this, LibraryActivity.class);
+            startActivity(intent);
         });
 
         btnLogout.setOnClickListener(v -> {
@@ -215,7 +206,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (tvListeningStatus != null) {
-            tvListeningStatus.setText("LISTENING...");
+            tvListeningStatus.setText("LISTENING... (15 sec)");
             if (fadeInUp != null) tvListeningStatus.startAnimation(fadeInUp);
         }
 
@@ -223,6 +214,8 @@ public class MainActivity extends AppCompatActivity {
             btnRecognize.animate().scaleX(1.05f).scaleY(1.05f).setDuration(300).start();
             btnRecognize.setEnabled(false);
         }
+
+        Toast.makeText(this, "🎧 Listening for 15 seconds...\nPlay a popular song loudly", Toast.LENGTH_LONG).show();
     }
 
     private void startRingAnimation(View ring, int delay) {
@@ -302,14 +295,7 @@ public class MainActivity extends AppCompatActivity {
         audDHelper.startRecognition();
         autoStopHandler.postDelayed(() -> {
             if (isRecognizing) audDHelper.stopAndRecognize();
-        }, 12000);
-    }
-
-    private void saveRecognizedSong(String title, String artist) {
-        String id = db.collection("tracks").document().getId();
-        MusicTrack track = new MusicTrack(id, title, artist);
-        db.collection("tracks").document(id).set(track)
-                .addOnSuccessListener(aVoid -> loadTracks());
+        }, 17000);
     }
 
     private void loadTracks() {
@@ -328,33 +314,81 @@ public class MainActivity extends AppCompatActivity {
 
     private void showTrackDetailsDialog(MusicTrack track) {
         String date = new SimpleDateFormat("MMM d, yyyy 'at' h:mm a", Locale.getDefault()).format(new Date(track.getTimestamp()));
+
+        String[] options = {"🎬 Listen on YouTube", "🎧 Listen on Spotify", "🔍 Search Google", "❌ Delete Song"};
+
         new MaterialAlertDialogBuilder(this)
                 .setTitle("🎵 " + track.getTitle())
                 .setMessage("🎤 Artist: " + track.getArtist() + "\n\n📅 " + date)
-                .setPositiveButton("OK", null)
-                .setNeutralButton("Delete", (dialog, which) -> deleteTrack(track))
+                .setItems(options, (dialog, which) -> {
+                    switch (which) {
+                        case 0:
+                            openYouTubeLink(track);
+                            break;
+                        case 1:
+                            openSpotifyLink(track);
+                            break;
+                        case 2:
+                            openGoogleSearch(track);
+                            break;
+                        case 3:
+                            deleteTrack(track);
+                            break;
+                    }
+                })
                 .show();
     }
 
-    private void deleteTrack(MusicTrack track) {
-        db.collection("tracks").document(track.getId()).delete()
-                .addOnSuccessListener(aVoid -> loadTracks());
+    private void openYouTubeLink(MusicTrack track) {
+        String searchQuery = track.getTitle() + " " + track.getArtist() + " official audio";
+        String url = "https://www.youtube.com/results?search_query=" + searchQuery.replace(" ", "+");
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+        startActivity(intent);
     }
 
-    private void showLibraryDialog() {
+    private void openSpotifyLink(MusicTrack track) {
+        String searchQuery = track.getTitle() + " " + track.getArtist();
+        String url = "https://open.spotify.com/search/" + searchQuery.replace(" ", "%20");
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+        startActivity(intent);
+    }
+
+    private void openGoogleSearch(MusicTrack track) {
+        String searchQuery = track.getTitle() + " " + track.getArtist();
+        String url = "https://www.google.com/search?q=" + searchQuery.replace(" ", "+");
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+        startActivity(intent);
+    }
+
+    private void deleteTrack(MusicTrack track) {
         new MaterialAlertDialogBuilder(this)
-                .setTitle("📚 My Library")
-                .setMessage(trackList.isEmpty() ? "Your library is empty." : "You have " + trackList.size() + " discovered songs.")
-                .setPositiveButton("OK", null)
+                .setTitle("Delete Song")
+                .setMessage("Are you sure you want to delete \"" + track.getTitle() + "\"?")
+                .setPositiveButton("Yes", (dialog, which) -> {
+                    db.collection("tracks").document(track.getId()).delete()
+                            .addOnSuccessListener(aVoid -> {
+                                loadTracks();
+                                Toast.makeText(this, "Deleted: " + track.getTitle(), Toast.LENGTH_SHORT).show();
+                            });
+                })
+                .setNegativeButton("No", null)
                 .show();
     }
 
     private void clearAllTracks() {
+        if (trackList.isEmpty()) {
+            Toast.makeText(this, "No songs to clear", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         new MaterialAlertDialogBuilder(this)
                 .setTitle("Clear Library")
-                .setMessage("Delete all songs?")
+                .setMessage("Delete all " + trackList.size() + " songs?")
                 .setPositiveButton("Yes", (dialog, which) -> {
-                    for (MusicTrack t : trackList) db.collection("tracks").document(t.getId()).delete();
+                    for (MusicTrack t : trackList) {
+                        db.collection("tracks").document(t.getId()).delete();
+                    }
+                    Toast.makeText(this, "Library cleared", Toast.LENGTH_SHORT).show();
                 })
                 .setNegativeButton("No", null)
                 .show();
@@ -376,9 +410,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void logout() {
-        mAuth.signOut();
-        startActivity(new Intent(this, LoginActivity.class));
-        finish();
+        new MaterialAlertDialogBuilder(this)
+                .setTitle("Logout")
+                .setMessage("Are you sure you want to logout?")
+                .setPositiveButton("Yes", (dialog, which) -> {
+                    mAuth.signOut();
+                    startActivity(new Intent(this, LoginActivity.class));
+                    finish();
+                })
+                .setNegativeButton("No", null)
+                .show();
     }
 
     @Override
@@ -386,6 +427,8 @@ public class MainActivity extends AppCompatActivity {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == REQUEST_RECORD_AUDIO_PERMISSION && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             startRecognition();
+        } else {
+            Toast.makeText(this, "Microphone permission is required to recognize songs", Toast.LENGTH_LONG).show();
         }
     }
 }
