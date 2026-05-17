@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/navigation_home"
+        android:title="Identify"
+        android:icon="@android:drawable/ic_btn_speak_now" />
+    <item
+        android:id="@+id/navigation_history"
+        android:title="History"
+        android:icon="@android:drawable/ic_menu_recent_history" />
+    <item
+        android:id="@+id/navigation_discover"
+        android:title="Discover"
+        android:icon="@android:drawable/ic_menu_compass" />
+</menu>

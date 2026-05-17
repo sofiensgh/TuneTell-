@@ -5,9 +5,6 @@ public class MusicTrack {
     private String title;
     private String artist;
     private long timestamp;
-    private String spotifyUrl;
-    private String youtubeUrl;
-    private String albumName;
     private String artworkUrl;
 
     // Empty constructor required for Firestore
@@ -18,22 +15,15 @@ public class MusicTrack {
         this.title = title;
         this.artist = artist;
         this.timestamp = System.currentTimeMillis();
-        this.spotifyUrl = "";
-        this.youtubeUrl = "";
-        this.albumName = "";
         this.artworkUrl = "";
     }
 
-    // Constructor with all fields
-    public MusicTrack(String id, String title, String artist, String albumName, String artworkUrl, String spotifyUrl, String youtubeUrl) {
+    public MusicTrack(String id, String title, String artist, String artworkUrl) {
         this.id = id;
         this.title = title;
         this.artist = artist;
         this.timestamp = System.currentTimeMillis();
-        this.albumName = albumName;
-        this.artworkUrl = artworkUrl;
-        this.spotifyUrl = spotifyUrl;
-        this.youtubeUrl = youtubeUrl;
+        this.artworkUrl = filterArtworkUrl(artworkUrl);
     }
 
     // Getters
@@ -41,9 +31,6 @@ public class MusicTrack {
     public String getTitle() { return title; }
     public String getArtist() { return artist; }
     public long getTimestamp() { return timestamp; }
-    public String getSpotifyUrl() { return spotifyUrl; }
-    public String getYoutubeUrl() { return youtubeUrl; }
-    public String getAlbumName() { return albumName; }
     public String getArtworkUrl() { return artworkUrl; }
 
     // Setters
@@ -51,8 +38,26 @@ public class MusicTrack {
     public void setTitle(String title) { this.title = title; }
     public void setArtist(String artist) { this.artist = artist; }
     public void setTimestamp(long timestamp) { this.timestamp = timestamp; }
-    public void setSpotifyUrl(String spotifyUrl) { this.spotifyUrl = spotifyUrl; }
-    public void setYoutubeUrl(String youtubeUrl) { this.youtubeUrl = youtubeUrl; }
-    public void setAlbumName(String albumName) { this.albumName = albumName; }
-    public void setArtworkUrl(String artworkUrl) { this.artworkUrl = artworkUrl; }
+    public void setArtworkUrl(String artworkUrl) {
+        this.artworkUrl = filterArtworkUrl(artworkUrl);
+    }
+
+    private String filterArtworkUrl(String url) {
+        if (url == null || url.isEmpty()) return "";
+        // Filter out audio files
+        if (url.contains(".m4a") || url.contains(".aac") || url.contains(".mp3") || url.contains(".wav")) {
+            return "";
+        }
+        // Accept image URLs - more permissive to handle various image formats
+        if (url.contains(".jpg") || url.contains(".jpeg") || url.contains(".png") || url.contains(".webp") ||
+            url.contains(".gif") || url.contains(".bmp") || url.contains("image") || url.contains("cover") ||
+            url.contains("artwork") || url.contains("spotify") || url.contains("itunes")) {
+            return url;
+        }
+        // If it's a valid URL that doesn't contain audio extensions, accept it
+        if (url.startsWith("http://") || url.startsWith("https://")) {
+            return url;
+        }
+        return "";
+    }
 }

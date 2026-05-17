@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true"
-    android:background="@drawable/gradient_background">
+    android:background="@drawable/bg_modern_gradient">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
@@ -200,7 +200,7 @@
             android:layout_width="match_parent"
             android:layout_height="2dp"
             android:layout_marginTop="40dp"
-            android:background="@drawable/glow_effect"
+            android:background="#00D2FF"
             android:alpha="0.5"
             app:layout_constraintTop_toBottomOf="@id/btnSignup" />
 

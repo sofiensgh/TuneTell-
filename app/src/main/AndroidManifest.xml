@@ -12,6 +12,7 @@
         android:theme="@style/Theme.TuneTell"
         android:requestLegacyExternalStorage="true">
 
+        <!-- Login Activity - Launcher -->
         <activity android:name=".LoginActivity" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -19,10 +20,14 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".MainActivity" android:exported="false"/>
+        <!-- Main Activity - Home/Listen -->
+        <activity android:name=".MainActivity" android:exported="false" />
 
-        <!-- NEW: 3rd Activity - LibraryActivity -->
-        <activity android:name=".LibraryActivity" android:exported="false"/>
+        <!-- History Activity - My Journey -->
+        <activity android:name=".HistoryActivity" android:exported="false" />
+
+        <!-- Discover Activity - Trends & Mixes -->
+        <activity android:name=".DiscoverActivity" android:exported="false" />
 
     </application>
 

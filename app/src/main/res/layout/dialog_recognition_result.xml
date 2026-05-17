@@ -1,150 +1,186 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:background="@drawable/gradient_background"
-    android:padding="24dp"
-    android:elevation="24dp">
+    android:layout_margin="16dp"
+    app:cardCornerRadius="24dp"
+    app:cardElevation="16dp"
+    app:cardBackgroundColor="#1A1A2E"
+    app:strokeWidth="1dp"
+    app:strokeColor="#3300D2FF">
 
-    <!-- Close Button -->
-    <ImageView
-        android:id="@+id/btnClose"
-        android:layout_width="32dp"
-        android:layout_height="32dp"
-        android:layout_gravity="end"
-        android:src="@android:drawable/ic_menu_close_clear_cancel"
-        android:tint="#FFFFFF"
-        android:alpha="0.7" />
-
-    <!-- Album Cover -->
-    <FrameLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:layout_marginBottom="16dp">
+        android:padding="24dp">
 
-        <ImageView
-            android:id="@+id/ivAlbumCover"
-            android:layout_width="200dp"
-            android:layout_height="200dp"
-            android:layout_gravity="center"
-            android:scaleType="centerCrop"
-            android:background="@drawable/card_modern"
-            android:src="@drawable/ic_music_placeholder" />
-
-        <!-- Loading Overlay -->
-        <ProgressBar
-            android:id="@+id/progressCover"
+        <!-- Close Icon -->
+        <ImageButton
+            android:id="@+id/btnClose"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:layout_gravity="center"
-            android:visibility="gone" />
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@android:drawable/ic_menu_close_clear_cancel"
+            app:tint="#8899AA"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-    </FrameLayout>
+        <!-- Album Artwork (Spotify Style) -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/artworkCard"
+            android:layout_width="240dp"
+            android:layout_height="240dp"
+            android:layout_marginTop="16dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="12dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/btnClose">
 
-    <!-- Song Title -->
-    <TextView
-        android:id="@+id/tvSongTitle"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Song Title"
-        android:textSize="22sp"
-        android:textStyle="bold"
-        android:textColor="#FFFFFF"
-        android:gravity="center"
-        android:layout_marginTop="8dp" />
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
 
-    <!-- Artist Name -->
-    <TextView
-        android:id="@+id/tvArtistName"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Artist Name"
-        android:textSize="16sp"
-        android:textColor="#8899AA"
-        android:gravity="center"
-        android:layout_marginTop="4dp" />
+                <ImageView
+                    android:id="@+id/ivAlbumCover"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/ic_music_placeholder" />
 
-    <!-- Album Name -->
-    <TextView
-        android:id="@+id/tvAlbumName"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Album Name"
-        android:textSize="14sp"
-        android:textColor="#00D2FF"
-        android:gravity="center"
-        android:layout_marginTop="4dp" />
+                <ProgressBar
+                    android:id="@+id/progressCover"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_gravity="center"
+                    android:visibility="gone" />
 
-    <!-- Divider -->
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="#3300D2FF"
-        android:layout_margin="16dp" />
+            </FrameLayout>
 
-    <!-- Action Buttons -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center">
+        </com.google.android.material.card.MaterialCardView>
 
-        <Button
-            android:id="@+id/btnSpotify"
+        <!-- Song Title -->
+        <TextView
+            android:id="@+id/tvSongTitle"
             android:layout_width="0dp"
-            android:layout_height="48dp"
-            android:layout_weight="1"
-            android:text="🎧 Spotify"
-            android:textSize="14sp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:gravity="center"
+            android:text="Song Title"
             android:textColor="#FFFFFF"
-            android:layout_marginEnd="8dp"
-            android:background="@drawable/button_gradient" />
+            android:textSize="24sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/artworkCard" />
 
-        <Button
-            android:id="@+id/btnYouTube"
+        <!-- Artist Name -->
+        <TextView
+            android:id="@+id/tvArtistName"
             android:layout_width="0dp"
-            android:layout_height="48dp"
-            android:layout_weight="1"
-            android:text="🎬 YouTube"
-            android:textSize="14sp"
-            android:textColor="#FFFFFF"
-            android:layout_marginStart="8dp"
-            android:background="@drawable/button_gradient" />
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:gravity="center"
+            android:text="Artist Name"
+            android:textColor="#00D2FF"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvSongTitle" />
 
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center"
-        android:layout_marginTop="12dp">
-
-        <Button
-            android:id="@+id/btnSaveToLibrary"
+        <!-- Album Name -->
+        <TextView
+            android:id="@+id/tvAlbumName"
             android:layout_width="0dp"
-            android:layout_height="48dp"
-            android:layout_weight="1"
-            android:text="💾 Save to Library"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:gravity="center"
+            android:text="Album Name"
+            android:textColor="#8899AA"
             android:textSize="14sp"
-            android:textColor="#FFFFFF"
-            android:layout_marginEnd="8dp"
-            android:background="@drawable/button_gradient" />
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvArtistName" />
 
-        <Button
-            android:id="@+id/btnDismiss"
-            android:layout_width="0dp"
-            android:layout_height="48dp"
-            android:layout_weight="1"
-            android:text="✕ Dismiss"
-            android:textSize="14sp"
-            android:textColor="#FFFFFF"
-            android:layout_marginStart="8dp"
-            android:background="@drawable/button_gradient" />
+        <!-- Action Buttons - Linear Layout instead of GridLayout (no extra dependency) -->
+        <LinearLayout
+            android:id="@+id/actionButtons"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="32dp"
+            android:orientation="horizontal"
+            android:weightSum="2"
+            app:layout_constraintTop_toBottomOf="@id/tvAlbumName">
 
-    </LinearLayout>
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnSpotify"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_weight="1"
+                android:text="Spotify"
+                android:textColor="#1DB954"
+                android:textSize="14sp"
+                android:layout_marginEnd="8dp"
+                app:strokeColor="#1DB954"
+                app:strokeWidth="1dp"
+                app:cornerRadius="28dp" />
 
-</LinearLayout>
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnYouTube"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_weight="1"
+                android:text="YouTube"
+                android:textColor="#FF0000"
+                android:textSize="14sp"
+                android:layout_marginStart="8dp"
+                app:strokeColor="#FF0000"
+                app:strokeWidth="1dp"
+                app:cornerRadius="28dp" />
+
+        </LinearLayout>
+
+        <!-- Second Row of Buttons -->
+        <LinearLayout
+            android:id="@+id/actionButtonsRow2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:orientation="horizontal"
+            android:weightSum="2"
+            app:layout_constraintTop_toBottomOf="@id/actionButtons">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnSaveToLibrary"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_weight="1"
+                android:text="Save to Library"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:layout_marginEnd="8dp"
+                app:backgroundTint="#00D2FF"
+                app:cornerRadius="28dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDismiss"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_weight="1"
+                android:text="Close"
+                android:textColor="#8899AA"
+                android:textSize="14sp"
+                android:layout_marginStart="8dp"
+                app:strokeColor="#8899AA"
+                app:cornerRadius="28dp" />
+
+        </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</com.google.android.material.card.MaterialCardView>

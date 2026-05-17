@@ -9,6 +9,7 @@ import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,13 +23,14 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatDialogFragment;
 import com.example.tunetell.R;
-import com.example.tunetell.models.MusicTrack;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 
 public class RecognitionResultDialog extends AppCompatDialogFragment {
 
@@ -50,9 +52,29 @@ public class RecognitionResultDialog extends AppCompatDialogFragment {
         this.title = title;
         this.artist = artist;
         this.album = album;
-        this.artworkUrl = artworkUrl;
+        // Filter out audio files (only keep image URLs) - more permissive filtering
+        this.artworkUrl = filterArtworkUrl(artworkUrl);
         this.spotifyUrl = spotifyUrl;
         this.youtubeUrl = youtubeUrl;
+    }
+
+    private String filterArtworkUrl(String url) {
+        if (url == null || url.isEmpty()) return "";
+        // Filter out audio files
+        if (url.contains(".m4a") || url.contains(".aac") || url.contains(".mp3") || url.contains(".wav")) {
+            return "";
+        }
+        // Accept image URLs - more permissive to handle various image formats
+        if (url.contains(".jpg") || url.contains(".jpeg") || url.contains(".png") || url.contains(".webp") ||
+            url.contains(".gif") || url.contains(".bmp") || url.contains("image") || url.contains("cover") ||
+            url.contains("artwork") || url.contains("spotify") || url.contains("itunes")) {
+            return url;
+        }
+        // If it's a valid URL that doesn't contain audio extensions, accept it
+        if (url.startsWith("http://") || url.startsWith("https://")) {
+            return url;
+        }
+        return "";
     }
 
     public void setOnTrackSavedListener(OnTrackSavedListener listener) {
@@ -92,12 +114,10 @@ public class RecognitionResultDialog extends AppCompatDialogFragment {
         Button btnDismiss = view.findViewById(R.id.btnDismiss);
         View btnClose = view.findViewById(R.id.btnClose);
 
-        // Set text data
         tvSongTitle.setText(title);
         tvArtistName.setText(artist);
         tvAlbumName.setText(album != null && !album.isEmpty() ? album : "Single");
 
-        // Load album cover using AsyncTask
         if (artworkUrl != null && !artworkUrl.isEmpty()) {
             progressCover.setVisibility(View.VISIBLE);
             new DownloadImageTask(ivAlbumCover, progressCover).execute(artworkUrl);
@@ -106,65 +126,92 @@ public class RecognitionResultDialog extends AppCompatDialogFragment {
             ivAlbumCover.setImageResource(R.drawable.ic_music_placeholder);
         }
 
-        // Spotify button
-        btnSpotify.setOnClickListener(v -> {
-            String url = (spotifyUrl != null && !spotifyUrl.isEmpty()) ?
-                    spotifyUrl : "https://open.spotify.com/search/" + title.replace(" ", "%20");
-            openLink(url);
-        });
+        btnSpotify.setOnClickListener(v -> openLink(spotifyUrl));
+        btnYouTube.setOnClickListener(v -> openLink(youtubeUrl));
 
-        // YouTube button
-        btnYouTube.setOnClickListener(v -> {
-            String url = (youtubeUrl != null && !youtubeUrl.isEmpty()) ?
-                    youtubeUrl : "https://www.youtube.com/results?search_query=" + title.replace(" ", "+") + "+" + artist.replace(" ", "+");
-            openLink(url);
-        });
-
-        // Save to Library button
         btnSaveToLibrary.setOnClickListener(v -> {
-            saveToFirestore();
-            dialog.dismiss();
+            btnSaveToLibrary.setEnabled(false);
+            btnSaveToLibrary.setText("Saving...");
+            saveToFirestore(dialog);
         });
 
-        // Dismiss button
         btnDismiss.setOnClickListener(v -> dialog.dismiss());
-
-        // Close button
         btnClose.setOnClickListener(v -> dialog.dismiss());
     }
 
     private void openLink(String url) {
+        if (url == null || url.isEmpty()) {
+            url = "https://www.google.com/search?q=" + title.replace(" ", "+");
+        }
         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
         startActivity(intent);
     }
 
-    private void saveToFirestore() {
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        FirebaseAuth mAuth = FirebaseAuth.getInstance();
+    private void saveToFirestore(Dialog dialog) {
+        try {
+            FirebaseFirestore db = FirebaseFirestore.getInstance();
+            FirebaseAuth mAuth = FirebaseAuth.getInstance();
 
-        if (mAuth.getCurrentUser() == null) {
-            Toast.makeText(getContext(), "Please login first", Toast.LENGTH_SHORT).show();
-            return;
+            if (mAuth.getCurrentUser() == null) {
+                if (getContext() != null) {
+                    Toast.makeText(getContext(), "Please login first", Toast.LENGTH_SHORT).show();
+                }
+                resetSaveButton(dialog);
+                return;
+            }
+
+            String id = db.collection("tracks").document().getId();
+
+            Map<String, Object> trackData = new HashMap<>();
+            trackData.put("title", title != null ? title : "Unknown");
+            trackData.put("artist", artist != null ? artist : "Unknown");
+            trackData.put("timestamp", System.currentTimeMillis());
+            // Only save if it's a valid image URL
+            if (artworkUrl != null && !artworkUrl.isEmpty()) {
+                trackData.put("artworkUrl", artworkUrl);
+            }
+
+            db.collection("tracks").document(id).set(trackData)
+                    .addOnSuccessListener(aVoid -> {
+                        if (getContext() != null) {
+                            Toast.makeText(getContext(), "✅ Saved to library!", Toast.LENGTH_SHORT).show();
+                        }
+                        if (savedListener != null) {
+                            savedListener.onTrackSaved();
+                        }
+                        if (dialog != null && dialog.isShowing()) {
+                            dialog.dismiss();
+                        }
+                    })
+                    .addOnFailureListener(e -> {
+                        Log.e("SaveTrack", "Error: " + e.getMessage());
+                        if (getContext() != null) {
+                            Toast.makeText(getContext(), "Failed to save: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                        }
+                        resetSaveButton(dialog);
+                    });
+        } catch (Exception e) {
+            Log.e("SaveTrack", "Exception: " + e.getMessage(), e);
+            if (getContext() != null) {
+                Toast.makeText(getContext(), "Failed to save", Toast.LENGTH_SHORT).show();
+            }
+            resetSaveButton(dialog);
         }
+    }
 
-        String id = db.collection("tracks").document().getId();
-        MusicTrack track = new MusicTrack(id, title, artist, album, artworkUrl, spotifyUrl, youtubeUrl);
-
-        db.collection("tracks").document(id).set(track)
-                .addOnSuccessListener(aVoid -> {
-                    Toast.makeText(getContext(), "✅ Saved to library!", Toast.LENGTH_SHORT).show();
-                    if (savedListener != null) {
-                        savedListener.onTrackSaved();
-                    }
-                })
-                .addOnFailureListener(e ->
-                        Toast.makeText(getContext(), "Failed to save", Toast.LENGTH_SHORT).show()
-                );
+    private void resetSaveButton(Dialog dialog) {
+        if (dialog != null && dialog.isShowing()) {
+            Button btnSaveToLibrary = dialog.findViewById(R.id.btnSaveToLibrary);
+            if (btnSaveToLibrary != null) {
+                btnSaveToLibrary.setEnabled(true);
+                btnSaveToLibrary.setText("Save to Library");
+            }
+        }
     }
 
     private static class DownloadImageTask extends AsyncTask<String, Void, Bitmap> {
-        private ImageView imageView;
-        private ProgressBar progressBar;
+        private final ImageView imageView;
+        private final ProgressBar progressBar;
 
         public DownloadImageTask(ImageView imageView, ProgressBar progressBar) {
             this.imageView = imageView;
@@ -184,6 +231,7 @@ public class RecognitionResultDialog extends AppCompatDialogFragment {
                 connection.connect();
                 InputStream input = connection.getInputStream();
                 bitmap = BitmapFactory.decodeStream(input);
+                input.close();
             } catch (Exception e) {
                 e.printStackTrace();
             }
